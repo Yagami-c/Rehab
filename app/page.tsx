@@ -43,8 +43,9 @@ export default function LoginPage() {
     router.push("/profile")
   }
 
+  // 跳过验证：只需输入任意验证码即可登录
   const canLogin = agreed && (
-    (loginMethod === "phone" && phone && code) ||
+    (loginMethod === "phone" && code.length >= 1) ||
     (loginMethod === "email" && email && password) ||
     loginMethod === "wechat"
   )

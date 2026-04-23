@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { OrbitControls, Environment, Html, Line } from "@react-three/drei"
+import { OrbitControls, Html, Line } from "@react-three/drei"
 import * as THREE from "three"
 
 interface KneeJointProps {
@@ -228,7 +228,6 @@ export default function Knee3DModel({
           minPolarAngle={Math.PI / 4}
           maxPolarAngle={Math.PI * 3 / 4}
         />
-        <Environment preset="studio" />
       </Canvas>
     </div>
   )

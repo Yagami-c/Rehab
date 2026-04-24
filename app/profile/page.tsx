@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Camera, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,22 @@ export default function ProfilePage() {
   const [height, setHeight] = useState("")
   const [weight, setWeight] = useState("")
   const [goals, setGoals] = useState<string[]>([])
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // 加载之前保存的信息
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("profile")
+    if (savedProfile) {
+      const data = JSON.parse(savedProfile)
+      setNickname(data.nickname || "")
+      setBirthDate(data.birthDate || "")
+      setGender(data.gender || "")
+      setHeight(data.height || "")
+      setWeight(data.weight || "")
+      setGoals(data.goals || [])
+    }
+    setIsLoaded(true)
+  }, [])
 
   const calculateBMI = () => {
     const h = parseFloat(height) / 100
@@ -51,7 +67,6 @@ export default function ProfilePage() {
   }
 
   const handleSubmit = () => {
-    // 保存个人档案
     localStorage.setItem("profile", JSON.stringify({
       nickname,
       birthDate,
@@ -68,62 +83,66 @@ export default function ProfilePage() {
   const bmi = calculateBMI()
   const bmiStatus = bmi ? getBMIStatus(parseFloat(bmi)) : null
 
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-background" />
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 bg-card z-10 border-b border-border">
-        <div className="flex items-center h-14 px-4">
+        <div className="flex items-center h-12 px-4">
           <button onClick={() => router.back()} className="p-2 -ml-2">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="flex-1 text-center font-semibold">完善个人档案</h1>
+          <h1 className="flex-1 text-center font-semibold text-base">我的档案</h1>
           <div className="w-9" />
         </div>
       </header>
 
-      <main className="p-6 space-y-6 pb-24">
+      <main className="p-4 space-y-4 pb-20">
         {/* Avatar */}
         <div className="flex justify-center">
           <button className="relative">
-            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-              <span className="text-3xl text-primary font-semibold">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-2xl text-primary font-semibold">
                 {nickname ? nickname[0].toUpperCase() : "U"}
               </span>
             </div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <Camera className="w-4 h-4 text-primary-foreground" />
+            <div className="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+              <Camera className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
           </button>
         </div>
 
         {/* Nickname */}
-        <div className="space-y-2">
-          <Label htmlFor="nickname">昵称 *</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="nickname" className="text-sm">昵称 *</Label>
           <Input
             id="nickname"
             placeholder="请输入您的昵称"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            className="h-12 bg-card"
+            className="h-11 bg-card text-base"
           />
         </div>
 
         {/* Birth Date */}
-        <div className="space-y-2">
-          <Label htmlFor="birthDate">出生日期</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="birthDate" className="text-sm">出生日期</Label>
           <Input
             id="birthDate"
             type="date"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
-            className="h-12 bg-card"
+            className="h-11 bg-card text-base"
           />
         </div>
 
         {/* Gender */}
-        <div className="space-y-2">
-          <Label>性别 *</Label>
-          <div className="flex gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-sm">性别 *</Label>
+          <div className="flex gap-2">
             {[
               { value: "male", label: "男" },
               { value: "female", label: "女" },
@@ -132,7 +151,7 @@ export default function ProfilePage() {
               <button
                 key={option.value}
                 onClick={() => setGender(option.value as typeof gender)}
-                className={`flex-1 py-3 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   gender === option.value
                     ? "bg-primary text-primary-foreground"
                     : "bg-card text-muted-foreground border border-border"
@@ -145,29 +164,29 @@ export default function ProfilePage() {
         </div>
 
         {/* Height & Weight */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="height">身高 (cm) *</Label>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="height" className="text-sm">身高 (cm) *</Label>
             <Input
               id="height"
               type="number"
               placeholder="170"
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              className="h-12 bg-card"
+              className="h-11 bg-card text-base"
               min={50}
               max={250}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="weight">体重 (kg) *</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="weight" className="text-sm">体重 (kg) *</Label>
             <Input
               id="weight"
               type="number"
               placeholder="65"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="h-12 bg-card"
+              className="h-11 bg-card text-base"
               min={20}
               max={300}
             />
@@ -176,7 +195,7 @@ export default function ProfilePage() {
 
         {/* BMI Display */}
         {bmi && bmiStatus && (
-          <div className="bg-card p-4 rounded-xl border border-border">
+          <div className="bg-card p-3 rounded-xl border border-border">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">BMI 指数</span>
               <div className="flex items-center gap-2">
@@ -186,29 +205,24 @@ export default function ProfilePage() {
                 </span>
               </div>
             </div>
-            <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
+            <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-400 via-accent to-destructive"
                 style={{ width: `${Math.min(parseFloat(bmi) / 35 * 100, 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>18.5</span>
-              <span>24</span>
-              <span>28</span>
-            </div>
           </div>
         )}
 
         {/* Rehab Goals */}
-        <div className="space-y-3">
-          <Label>康复目标 * (可多选)</Label>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label className="text-sm">康复目标 * (可多选)</Label>
+          <div className="grid grid-cols-2 gap-2">
             {REHAB_GOALS.map((goal) => (
               <button
                 key={goal.id}
                 onClick={() => toggleGoal(goal.id)}
-                className={`p-4 rounded-xl text-sm font-medium transition-colors text-left ${
+                className={`p-3 rounded-lg text-sm font-medium transition-colors text-left ${
                   goals.includes(goal.id)
                     ? "bg-primary text-primary-foreground"
                     : "bg-card text-foreground border border-border"
@@ -226,7 +240,7 @@ export default function ProfilePage() {
         <Button
           onClick={handleSubmit}
           disabled={!isValid}
-          className="w-full h-12 text-base font-medium"
+          className="w-full h-11 text-base font-medium"
         >
           保存并继续
           <ChevronRight className="w-5 h-5 ml-1" />

@@ -9,22 +9,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card } from "@/components/ui/card"
 
-const BODY_PARTS = [
-  { id: "neck", label: "颈部", x: 50, y: 12 },
-  { id: "shoulder_l", label: "左肩", x: 30, y: 18 },
-  { id: "shoulder_r", label: "右肩", x: 70, y: 18 },
-  { id: "upper_back", label: "上背", x: 50, y: 25 },
-  { id: "lower_back", label: "下背/腰", x: 50, y: 38 },
-  { id: "elbow_l", label: "左肘", x: 22, y: 35 },
-  { id: "elbow_r", label: "右肘", x: 78, y: 35 },
-  { id: "wrist_l", label: "左腕", x: 18, y: 48 },
-  { id: "wrist_r", label: "右腕", x: 82, y: 48 },
-  { id: "hip_l", label: "左髋", x: 38, y: 50 },
-  { id: "hip_r", label: "右髋", x: 62, y: 50 },
-  { id: "knee_l", label: "左膝", x: 38, y: 68 },
-  { id: "knee_r", label: "右膝", x: 62, y: 68 },
-  { id: "ankle_l", label: "左踝", x: 38, y: 88 },
-  { id: "ankle_r", label: "右踝", x: 62, y: 88 },
+// 改为选项式的身体部位
+const BODY_REGIONS = [
+  { id: "neck_shoulder", label: "颈肩部", description: "颈部、肩部" },
+  { id: "upper_limb", label: "上肢", description: "肘、腕、手" },
+  { id: "back_waist", label: "背腰部", description: "上背、下背、腰部" },
+  { id: "hip", label: "髋部", description: "髋关节、骨盆" },
+  { id: "knee", label: "膝关节", description: "膝盖、周围韧带" },
+  { id: "lower_limb", label: "小腿足踝", description: "小腿、踝、足" },
 ]
 
 const MEDICAL_HISTORY = [
@@ -46,7 +38,7 @@ const QUESTIONNAIRE = [
 export default function QuestionnairePage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [selectedParts, setSelectedParts] = useState<string[]>([])
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([])
   const [painLevel, setPainLevel] = useState([5])
   const [description, setDescription] = useState("")
   const [history, setHistory] = useState<string[]>([])
@@ -55,11 +47,11 @@ export default function QuestionnairePage() {
 
   const totalSteps = 4
 
-  const togglePart = (partId: string) => {
-    setSelectedParts((prev) =>
-      prev.includes(partId)
-        ? prev.filter((id) => id !== partId)
-        : [...prev, partId]
+  const toggleRegion = (regionId: string) => {
+    setSelectedRegions((prev) =>
+      prev.includes(regionId)
+        ? prev.filter((id) => id !== regionId)
+        : [...prev, regionId]
     )
   }
 
@@ -79,9 +71,8 @@ export default function QuestionnairePage() {
     if (step < totalSteps) {
       setStep(step + 1)
     } else {
-      // 保存数据并跳转
       localStorage.setItem("questionnaire", JSON.stringify({
-        selectedParts,
+        selectedRegions,
         painLevel: painLevel[0],
         description,
         history,
@@ -94,7 +85,7 @@ export default function QuestionnairePage() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return selectedParts.length > 0
+        return selectedRegions.length > 0
       case 2:
         return true
       case 3:
@@ -110,14 +101,13 @@ export default function QuestionnairePage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 bg-card z-10 border-b border-border">
-        <div className="flex items-center h-14 px-4">
+        <div className="flex items-center h-12 px-4">
           <button onClick={() => step > 1 ? setStep(step - 1) : router.back()} className="p-2 -ml-2">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="flex-1 text-center font-semibold">病情采集</h1>
+          <h1 className="flex-1 text-center font-semibold text-base">病情采集</h1>
           <span className="text-sm text-muted-foreground">{step}/{totalSteps}</span>
         </div>
-        {/* Progress Bar */}
         <div className="h-1 bg-muted">
           <div
             className="h-full bg-primary transition-all duration-300"
@@ -126,61 +116,50 @@ export default function QuestionnairePage() {
         </div>
       </header>
 
-      <main className="flex-1 p-6 pb-24 overflow-auto">
-        {/* Step 1: Body Part Selection */}
+      <main className="flex-1 p-4 pb-20 overflow-auto">
+        {/* Step 1: Body Region Selection */}
         {step === 1 && (
           <div>
-            <h2 className="text-lg font-semibold mb-2">选择不适部位</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              请点击下方人体图，选择您感到不适的部位（可多选）
+            <h2 className="text-base font-semibold mb-1">选择不适部位</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              请选择您感到不适的身体区域（可多选）
             </p>
             
-            <div className="relative bg-card rounded-2xl p-6 border border-border">
-              {/* Human Body Silhouette */}
-              <svg viewBox="0 0 100 100" className="w-full max-w-xs mx-auto">
-                {/* Body outline */}
-                <ellipse cx="50" cy="8" rx="8" ry="8" fill="#E5E7EB" /> {/* Head */}
-                <rect x="42" y="16" width="16" height="5" rx="2" fill="#E5E7EB" /> {/* Neck */}
-                <path d="M30 21 L70 21 L75 45 L60 45 L60 52 L40 52 L40 45 L25 45 Z" fill="#E5E7EB" /> {/* Torso */}
-                <path d="M25 45 L15 50 L18 52 L22 48 L25 45" fill="#E5E7EB" /> {/* Left arm */}
-                <path d="M75 45 L85 50 L82 52 L78 48 L75 45" fill="#E5E7EB" /> {/* Right arm */}
-                <rect x="38" y="52" width="10" height="40" rx="3" fill="#E5E7EB" /> {/* Left leg */}
-                <rect x="52" y="52" width="10" height="40" rx="3" fill="#E5E7EB" /> {/* Right leg */}
-              </svg>
-              
-              {/* Clickable points */}
-              {BODY_PARTS.map((part) => (
-                <button
-                  key={part.id}
-                  onClick={() => togglePart(part.id)}
-                  className={`absolute w-6 h-6 rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all ${
-                    selectedParts.includes(part.id)
-                      ? "bg-primary border-primary scale-110"
-                      : "bg-white border-muted-foreground/30 hover:border-primary"
+            <div className="space-y-2">
+              {BODY_REGIONS.map((region) => (
+                <Card
+                  key={region.id}
+                  onClick={() => toggleRegion(region.id)}
+                  className={`p-3.5 cursor-pointer transition-all active:scale-[0.98] ${
+                    selectedRegions.includes(region.id)
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-border"
                   }`}
-                  style={{ left: `${part.x}%`, top: `${part.y + 8}%` }}
-                  title={part.label}
-                />
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      selectedRegions.includes(region.id)
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground/30"
+                    }`}>
+                      {selectedRegions.includes(region.id) && (
+                        <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{region.label}</p>
+                      <p className="text-xs text-muted-foreground">{region.description}</p>
+                    </div>
+                  </div>
+                </Card>
               ))}
             </div>
 
-            {/* Selected Parts */}
-            {selectedParts.length > 0 && (
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground mb-2">已选择：</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedParts.map((partId) => {
-                    const part = BODY_PARTS.find((p) => p.id === partId)
-                    return (
-                      <span
-                        key={partId}
-                        className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                      >
-                        {part?.label}
-                      </span>
-                    )
-                  })}
-                </div>
+            {selectedRegions.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">已选择 {selectedRegions.length} 个部位</p>
               </div>
             )}
           </div>
@@ -188,18 +167,18 @@ export default function QuestionnairePage() {
 
         {/* Step 2: Pain Assessment */}
         {step === 2 && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-2">疼痛程度评估</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                请滑动下方滑块，选择您目前的疼痛程度
+              <h2 className="text-base font-semibold mb-1">疼痛程度评估</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                请选择您目前的疼痛程度
               </p>
             </div>
 
-            <Card className="p-6">
-              <div className="text-center mb-6">
-                <span className="text-5xl font-bold text-primary">{painLevel[0]}</span>
-                <p className="text-sm text-muted-foreground mt-2">
+            <Card className="p-4">
+              <div className="text-center mb-5">
+                <span className="text-4xl font-bold text-primary">{painLevel[0]}</span>
+                <p className="text-sm text-muted-foreground mt-1">
                   {painLevel[0] <= 2 ? "轻微不适" : 
                    painLevel[0] <= 4 ? "轻度疼痛" :
                    painLevel[0] <= 6 ? "中度疼痛" :
@@ -213,7 +192,7 @@ export default function QuestionnairePage() {
                 min={0}
                 max={10}
                 step={1}
-                className="mb-4"
+                className="mb-3"
               />
               
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -224,12 +203,12 @@ export default function QuestionnairePage() {
             </Card>
 
             <div>
-              <h3 className="font-medium mb-3">症状描述（选填）</h3>
+              <h3 className="font-medium text-sm mb-2">症状描述（选填）</h3>
               <Textarea
                 placeholder="请描述您的症状，如疼痛性质、发作时间等..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[120px] bg-card"
+                className="min-h-[100px] bg-card text-base"
               />
             </div>
           </div>
@@ -238,17 +217,17 @@ export default function QuestionnairePage() {
         {/* Step 3: Medical History */}
         {step === 3 && (
           <div>
-            <h2 className="text-lg font-semibold mb-2">病史采集</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              请选择您的相关病史（可多选）
+            <h2 className="text-base font-semibold mb-1">病史采集</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              请选择您的相关病史（可多选，无则跳过）
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {MEDICAL_HISTORY.map((item) => (
                 <Card
                   key={item.id}
                   onClick={() => toggleHistory(item.id)}
-                  className={`p-4 cursor-pointer transition-colors ${
+                  className={`p-3.5 cursor-pointer transition-colors active:scale-[0.98] ${
                     history.includes(item.id)
                       ? "border-primary bg-primary/5"
                       : ""
@@ -259,7 +238,7 @@ export default function QuestionnairePage() {
                       checked={history.includes(item.id)}
                       onCheckedChange={() => toggleHistory(item.id)}
                     />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium text-sm">{item.label}</span>
                   </div>
                 </Card>
               ))}
@@ -270,26 +249,26 @@ export default function QuestionnairePage() {
         {/* Step 4: Questionnaire */}
         {step === 4 && (
           <div>
-            <h2 className="text-lg font-semibold mb-2">症状量表</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              请根据您的实际情况选择最符合的选项
+            <h2 className="text-base font-semibold mb-1">症状量表</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              请根据实际情况选择最符合的选项
             </p>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {QUESTIONNAIRE.map((q, index) => (
-                <Card key={q.id} className="p-4">
-                  <p className="font-medium mb-3">
+                <Card key={q.id} className="p-3.5">
+                  <p className="font-medium text-sm mb-2.5">
                     {index + 1}. {q.question}
                   </p>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {q.options.map((option) => (
                       <button
                         key={option}
                         onClick={() => setAnswers({ ...answers, [q.id]: option })}
-                        className={`w-full text-left p-3 rounded-lg text-sm transition-colors ${
+                        className={`w-full text-left p-2.5 rounded-lg text-sm transition-colors active:scale-[0.98] ${
                           answers[q.id] === option
                             ? "bg-primary text-primary-foreground"
-                            : "bg-muted hover:bg-muted/80"
+                            : "bg-muted"
                         }`}
                       >
                         {option}
@@ -308,7 +287,7 @@ export default function QuestionnairePage() {
         <Button
           onClick={handleNext}
           disabled={!canProceed()}
-          className="w-full h-12 text-base font-medium"
+          className="w-full h-11 text-base font-medium"
         >
           {step === totalSteps ? "提交并开始评估" : "下一步"}
         </Button>
@@ -316,22 +295,22 @@ export default function QuestionnairePage() {
 
       {/* Warning Modal */}
       {showWarning && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <Card className="w-full max-w-sm p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-destructive" />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-sm p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
               </div>
-              <h3 className="text-lg font-semibold">疼痛程度较高</h3>
+              <h3 className="text-base font-semibold">疼痛程度较高</h3>
             </div>
-            <p className="text-muted-foreground mb-6">
-              您当前的疼痛程度较高（VAS {painLevel[0]}），建议您先咨询专业医生，确认是否适合进行康复评估。
+            <p className="text-sm text-muted-foreground mb-5">
+              您当前的疼痛程度较高（VAS {painLevel[0]}），建议先咨询专业医生，确认是否适合进行康复评估。
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowWarning(false)}
-                className="flex-1"
+                className="flex-1 h-10"
               >
                 返回修改
               </Button>
@@ -340,7 +319,7 @@ export default function QuestionnairePage() {
                   setShowWarning(false)
                   setStep(step + 1)
                 }}
-                className="flex-1"
+                className="flex-1 h-10"
               >
                 继续评估
               </Button>

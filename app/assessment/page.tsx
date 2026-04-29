@@ -70,6 +70,88 @@ const SkeletonFigure = memo(function SkeletonFigure({ animate = false, exerciseT
   )
 })
 
+// 模型加载区域组件
+const ModelLoadingSection = memo(function ModelLoadingSection({ 
+  exercise, 
+  onStart 
+}: { 
+  exercise: typeof EXERCISES[0]; 
+  onStart: () => void 
+}) {
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
+
+  useEffect(() => {
+    // 模拟MediaPipe 3D姿态识别模型加载
+    const interval = setInterval(() => {
+      setLoadProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval)
+          setModelLoaded(true)
+          return 100
+        }
+        return p + Math.random() * 15
+      })
+    }, 200)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
+      {/* Camera Icon */}
+      <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-5 border border-slate-700">
+        <Camera className="w-10 h-10 text-cyan-500" />
+      </div>
+      
+      <h3 className="text-white font-semibold text-lg mb-2">准备好开始了吗？</h3>
+      
+      {!modelLoaded ? (
+        <>
+          <p className="text-slate-400 text-sm text-center mb-4">
+            正在加载 3D 姿态识别模型...
+          </p>
+          {/* Loading progress */}
+          <div className="w-full max-w-[200px] mb-6">
+            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-cyan-500 transition-all duration-300"
+                style={{ width: `${Math.min(loadProgress, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-500 text-center mt-2">
+              {Math.floor(Math.min(loadProgress, 100))}%
+            </p>
+          </div>
+          <Button 
+            disabled 
+            className="bg-slate-700 text-slate-400 h-12 px-8 rounded-xl text-sm cursor-not-allowed"
+          >
+            请等待模型加载...
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-slate-400 text-sm text-center mb-6">
+            模型加载完成，点击下方按钮开启摄像头
+          </p>
+          <Button 
+            onClick={onStart} 
+            className="bg-[#2066A2] hover:bg-[#1a5485] text-white h-12 px-8 rounded-xl text-sm font-medium"
+          >
+            <Camera className="w-5 h-5 mr-2" />
+            开启摄像头
+          </Button>
+        </>
+      )}
+      
+      {/* 底部提示 */}
+      <button className="mt-6 text-sm text-slate-500 underline">
+        没视频？使用 2D 模拟模式
+      </button>
+    </div>
+  )
+})
+
 export default function AssessmentPage() {
   const router = useRouter()
   const [selectedIdx, setSelectedIdx] = useState(0)
@@ -217,17 +299,10 @@ export default function AssessmentPage() {
             </div>
           </div>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
-            <div className="w-20 h-28 mb-3 opacity-40">
-              <SkeletonFigure animate={false} exerciseType={exercise.id} />
-            </div>
-            <h3 className="text-white font-medium text-sm mb-1">准备好开始了吗？</h3>
-            <p className="text-slate-500 text-xs text-center mb-5">模型加载完成，点击下方按钮开启摄像头</p>
-            <Button onClick={handleStart} className="bg-cyan-500 hover:bg-cyan-600 text-white h-10 px-6 rounded-xl text-sm">
-              <Camera className="w-4 h-4 mr-2" />
-              开启摄像头
-            </Button>
-          </div>
+          <ModelLoadingSection 
+            exercise={exercise} 
+            onStart={handleStart} 
+          />
         )}
       </div>
 

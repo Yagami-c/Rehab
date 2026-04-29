@@ -260,18 +260,43 @@ export default function LoginPage() {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-4">
-              <div className="text-sm text-gray-600 space-y-3">
-                <p>
-                  {showAgreement === "privacy" 
-                    ? "本隐私政策旨在向您说明我们如何收集、使用、存储和保护您的个人信息。"
-                    : "欢迎使用光年瑞康康复评估平台服务。使用我们的服务即表示您同意受本协议的约束。"
-                  }
-                </p>
-                <h4 className="text-gray-900 font-medium pt-2">1. 信息收集</h4>
-                <p>我们会收集您主动提供的信息，包括但不限于：姓名、联系方式、健康数据等。</p>
-                <h4 className="text-gray-900 font-medium pt-2">2. 信息使用</h4>
-                <p>我们收集的信息将用于为您提供康复评估服务、改善用户体验和服务质量。</p>
-              </div>
+              {showAgreement === "service" ? (
+                <div className="text-sm text-gray-600 space-y-3">
+                  <p className="font-medium text-gray-900">
+                    欢迎使用康复AI服务。请您务必审慎阅读、充分理解本协议各条款内容。一旦您勾选&quot;同意&quot;并登录，即视为您已充分理解并接受本协议全部条款。
+                  </p>
+                  <h4 className="text-gray-900 font-medium pt-2">一、服务说明</h4>
+                  <p>1. 本服务是由光年瑞康提供的基于人工智能技术的康复辅助指导工具，包括但不限于康复动作评估、训练计划生成、进展追踪等功能。</p>
+                  <p>2. 本服务不构成医疗诊断、处方或治疗，所有内容仅供参考，不能替代专业医师、康复治疗师的面诊与指导。</p>
+                  <h4 className="text-gray-900 font-medium pt-2">二、用户义务</h4>
+                  <p>1. 您应提供真实、准确的健康信息，并在身体状况发生变化时及时更新。</p>
+                  <p>2. 您确认在使用本服务前，已咨询专业医疗人员，明确自身适合进行相关康复活动。若在训练中出现疼痛、不适等异常反应，请立即停止，并及时就医。</p>
+                  <h4 className="text-gray-900 font-medium pt-2">三、风险提示与免责</h4>
+                  <p>1. 康复训练存在固有风险，包括但不限于肌肉酸痛、关节损伤、跌伤等。您自愿承担使用本服务可能产生的一切风险。</p>
+                  <p>2. 本服务AI模型基于通用数据训练，不针对个体特殊病情，其输出可能存在偏差。我方不对服务的准确性、完整性、时效性做任何明示或默示保证。</p>
+                  <h4 className="text-gray-900 font-medium pt-2">四、知识产权</h4>
+                  <p>本服务包含的软件、算法、图文、界面设计等知识产权均归我方所有，未经许可，您不得复制、修改、逆向工程或用于商业用途。</p>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600 space-y-3">
+                  <p className="font-medium text-gray-900">
+                    我们深知健康信息、个人信息对您的重要性，并会尽全力保护您的隐私安全。勾选同意即表示您已阅读并同意我们按照本协议收集、使用和存储您的信息。
+                  </p>
+                  <h4 className="text-gray-900 font-medium pt-2">一、我们收集的信息</h4>
+                  <p>为提供AI康复评估与训练指导服务，我们会收集以下必要信息：</p>
+                  <p>- 账户信息：手机号、用户名、头像等登录凭证</p>
+                  <p>- 健康数据：您主动填写的年龄、身高、体重、病史、损伤部位、疼痛程度、康复目标等</p>
+                  <p>- 运动数据：经您授权后，通过摄像头采集的关节角度、姿态视频片段、运动时长等，仅用于实时动作分析与反馈</p>
+                  <h4 className="text-gray-900 font-medium pt-2">二、信息如何使用</h4>
+                  <p>- 用于提供、维护和改进AI康复算法，生成个性化训练方案</p>
+                  <p>- 用于与您沟通，如发送训练提醒、服务更新通知</p>
+                  <p>- 用于数据分析与模型训练（经匿名化或去标识化处理后，无法关联到您个人）</p>
+                  <h4 className="text-gray-900 font-medium pt-2">三、敏感信息特别提示</h4>
+                  <p>您提供的健康数据、运动影像属于个人敏感信息，一旦泄露可能导致对您的歧视或人身安全隐患。我们会采取严格措施保护，仅用于为您提供AI康复服务，未经您的单独同意，不会用于其他商业目的。</p>
+                  <h4 className="text-gray-900 font-medium pt-2">四、您的权利</h4>
+                  <p>您可以随时登录账户查阅、更正、删除您的个人信息，或撤回同意并注销账户。撤回同意不影响此前已进行的处理的合法性。</p>
+                </div>
+              )}
             </div>
             <div className="p-4 border-t border-gray-100">
               <Button

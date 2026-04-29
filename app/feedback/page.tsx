@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, TrendingDown, TrendingUp, Minus, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, TrendingDown, TrendingUp, Minus, AlertTriangle, CheckCircle2, BookOpen, Dumbbell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -71,37 +71,26 @@ export default function FeedbackPage() {
     const hasAdverse = adverse.some(a => a !== "none")
     const deltaPain = assessment.squatPain - painAfter[0]
 
-    // 规则1: 有不良反应 → 降级
     if (hasAdverse) {
       newLevel = Math.max(1, newLevel - 1)
       reason = "出现不良反应，建议降低强度"
-    }
-    // 规则2: 疼痛加重 → 降级
-    else if (deltaPain < 0) {
+    } else if (deltaPain < 0) {
       newLevel = Math.max(1, newLevel - 1)
       reason = "使用后疼痛有所加重，建议降低强度"
-    }
-    // 规则3: 感觉太强 → 降级
-    else if (intensityFeel === "strong") {
+    } else if (intensityFeel === "strong") {
       newLevel = Math.max(1, newLevel - 1)
       reason = "强度感觉偏强，建议适当降低"
-    }
-    // 规则4: 疼痛明显改善 + 感觉太轻 → 升级
-    else if (deltaPain >= 2 && intensityFeel === "light") {
+    } else if (deltaPain >= 2 && intensityFeel === "light") {
       newLevel = Math.min(6, newLevel + 1)
       reason = "效果良好且强度偏轻，可尝试更高强度"
-    }
-    // 规则5: 轻度改善或无变化 + 整体更舒服 → 维持或升级
-    else if (globalEffect === "better" && deltaPain >= 0) {
+    } else if (globalEffect === "better" && deltaPain >= 0) {
       if (intensityFeel === "light") {
         newLevel = Math.min(6, newLevel + 1)
         reason = "整体感觉良好且强度偏轻，建议升级"
       } else {
         reason = "当前强度合适，建议维持使用"
       }
-    }
-    // 默认维持
-    else {
+    } else {
       reason = "建议维持当前强度继续使用"
     }
 
@@ -227,9 +216,9 @@ export default function FeedbackPage() {
 
             <div className="space-y-2">
               {[
-                { id: "better", label: "更舒服", icon: "😊", desc: "膝盖感觉轻松了" },
-                { id: "same", label: "没变化", icon: "😐", desc: "和之前差不多" },
-                { id: "worse", label: "更不适", icon: "😣", desc: "感觉不太舒服" },
+                { id: "better", label: "更舒服", desc: "膝盖感觉轻松了" },
+                { id: "same", label: "没变化", desc: "和之前差不多" },
+                { id: "worse", label: "更不适", desc: "感觉不太舒服" },
               ].map((item) => (
                 <Card
                   key={item.id}
@@ -241,7 +230,12 @@ export default function FeedbackPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{item.icon}</span>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                      item.id === "better" ? "bg-green-100" :
+                      item.id === "same" ? "bg-gray-100" : "bg-red-100"
+                    }`}>
+                      {item.id === "better" ? "+" : item.id === "same" ? "=" : "-"}
+                    </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.label}</p>
                       <p className="text-xs text-muted-foreground">{item.desc}</p>
@@ -411,6 +405,37 @@ export default function FeedbackPage() {
                 </div>
               </Card>
             )}
+
+            {/* 宣教和训练入口 */}
+            <div className="pt-2">
+              <h3 className="font-medium text-sm mb-3">继续康复</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+                  onClick={() => router.push("/education")}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-2">
+                      <BookOpen className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <p className="font-medium text-sm">康复宣教</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">学习康复知识</p>
+                  </div>
+                </Card>
+                <Card 
+                  className="p-4 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+                  onClick={() => router.push("/training")}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-2">
+                      <Dumbbell className="w-6 h-6 text-green-600" />
+                    </div>
+                    <p className="font-medium text-sm">康复训练</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">实时动作评估</p>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </div>
         )}
       </main>

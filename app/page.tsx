@@ -13,7 +13,7 @@ type LoginMethod = "phone" | "email"
 export default function LoginPage() {
   const router = useRouter()
   const [loginMethod, setLoginMethod] = useState<LoginMethod>("phone")
-  const [phone, setPhone] = useState("")
+  const [phone, setPhone] = useState("13800138000")
   const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -57,21 +57,21 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header with Logo Card */}
-      <div className="pt-16 pb-6 flex flex-col items-center px-6">
+      <div className="pt-12 pb-4 flex flex-col items-center px-6">
         {/* Logo Card - 参照Figma设计 */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 w-28 h-28 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-sm p-5 mb-5 w-24 h-24 flex items-center justify-center">
           <Image 
             src="/logo.jpg" 
             alt="光年瑞康 Aiyovita" 
-            width={80} 
-            height={80}
+            width={70} 
+            height={70}
             className="object-contain"
             priority
           />
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">康复评估平台</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-1">康复评估平台</h1>
         <p className="text-sm text-gray-500">科学的数字康复服务</p>
       </div>
 

@@ -1,353 +1,333 @@
 "use client"
 
-import { useState, useEffect, useRef, Suspense, useCallback } from "react"
+import { useState, useEffect, memo, Suspense, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import dynamic from "next/dynamic"
-import { 
-  ArrowLeft, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  SkipForward,
-  CheckCircle,
-  AlertCircle,
-  Maximize2,
-  Minimize2,
-  Activity,
-  RotateCw
-} from "lucide-react"
+import { X, Play, Pause, RotateCcw, Volume2, VolumeX, Camera, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import dynamic from "next/dynamic"
 
 const Knee3DModel = dynamic(() => import("@/components/knee-3d-model"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-slate-800">
-      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  ),
+  loading: () => <div className="w-full h-full flex items-center justify-center"><div className="text-cyan-400 text-xs">加载中...</div></div>,
 })
 
 const EXERCISES = [
-  { id: 1, name: "膝关节屈伸", description: "缓慢弯曲膝关节，再伸直", duration: 30, reps: 5, targetAngle: 90, type: "knee" },
-  { id: 2, name: "膝关节外展", description: "保持膝关节弯曲，缓慢向外侧张开", duration: 30, reps: 5, targetAngle: 30, type: "knee" },
-  { id: 3, name: "膝关节旋转", description: "保持膝关节弯曲90度，进行内外旋转", duration: 30, reps: 5, targetAngle: 15, type: "knee" },
+  { id: "squat", name: "深蹲", level: 2, description: "膝盖弯曲至90度，背部挺直" },
+  { id: "shoulder", name: "肩外展", level: 1, description: "双臂侧平举至肩膀高度" },
 ]
 
-interface KneeMetrics {
-  flexion: number
-  valgus: number
-  rotation: number
-  velocity: number
-  stability: number
-}
+// 人形骨架组件
+const SkeletonFigure = memo(function SkeletonFigure({ animate = false, exerciseType = "squat" }: { animate?: boolean; exerciseType?: string }) {
+  const [phase, setPhase] = useState(0)
+
+  useEffect(() => {
+    if (!animate) return
+    const interval = setInterval(() => setPhase(p => (p + 1) % 60), 50)
+    return () => clearInterval(interval)
+  }, [animate])
+
+  const progress = Math.sin((phase / 60) * Math.PI * 2)
+  const squatOffset = exerciseType === "squat" ? progress * 18 : 0
+  const kneeAngle = exerciseType === "squat" ? 12 + progress * 22 : 0
+  const armAngle = exerciseType === "shoulder" ? 40 + progress * 50 : 25
+
+  return (
+    <svg viewBox="0 0 200 280" className="w-full h-full">
+      <defs>
+        <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <g filter="url(#glow)" stroke="#22D3EE" strokeWidth="2.5" fill="none" strokeLinecap="round">
+        <circle cx="100" cy="32" r="16" />
+        <line x1="100" y1="48" x2="100" y2="60" />
+        <line x1="100" y1="60" x2="100" y2={120 + squatOffset * 0.3} />
+        <line x1="68" y1="70" x2="132" y2="70" />
+        <g transform={`rotate(${-armAngle}, 68, 70)`}>
+          <line x1="68" y1="70" x2="45" y2="100" />
+          <line x1="45" y1="100" x2="30" y2="130" />
+          <circle cx="30" cy="130" r="4" fill="#22D3EE" />
+        </g>
+        <g transform={`rotate(${armAngle}, 132, 70)`}>
+          <line x1="132" y1="70" x2="155" y2="100" />
+          <line x1="155" y1="100" x2="170" y2="130" />
+          <circle cx="170" cy="130" r="4" fill="#22D3EE" />
+        </g>
+        <line x1="78" y1={120 + squatOffset * 0.3} x2="122" y2={120 + squatOffset * 0.3} />
+        <line x1="78" y1={120 + squatOffset * 0.3} x2={78 - kneeAngle * 0.25} y2={165 + squatOffset * 0.6} />
+        <line x1={78 - kneeAngle * 0.25} y1={165 + squatOffset * 0.6} x2="75" y2={220 + squatOffset * 0.2} />
+        <ellipse cx="75" cy={225 + squatOffset * 0.2} rx="10" ry="4" fill="#22D3EE" />
+        <line x1="122" y1={120 + squatOffset * 0.3} x2={122 + kneeAngle * 0.25} y2={165 + squatOffset * 0.6} />
+        <line x1={122 + kneeAngle * 0.25} y1={165 + squatOffset * 0.6} x2="125" y2={220 + squatOffset * 0.2} />
+        <ellipse cx="125" cy={225 + squatOffset * 0.2} rx="10" ry="4" fill="#22D3EE" />
+        <circle cx="68" cy="70" r="3.5" fill="#22D3EE" />
+        <circle cx="132" cy="70" r="3.5" fill="#22D3EE" />
+        <circle cx="78" cy={120 + squatOffset * 0.3} r="3.5" fill="#22D3EE" />
+        <circle cx="122" cy={120 + squatOffset * 0.3} r="3.5" fill="#22D3EE" />
+        <circle cx={78 - kneeAngle * 0.25} cy={165 + squatOffset * 0.6} r="4" fill="#06B6D4" />
+        <circle cx={122 + kneeAngle * 0.25} cy={165 + squatOffset * 0.6} r="4" fill="#06B6D4" />
+      </g>
+    </svg>
+  )
+})
+
+// 模型加载区域组件
+const ModelLoadingSection = memo(function ModelLoadingSection({ 
+  exercise, 
+  onStart 
+}: { 
+  exercise: typeof EXERCISES[0]; 
+  onStart: () => void 
+}) {
+  const [modelLoaded, setModelLoaded] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
+
+  useEffect(() => {
+    // 模拟MediaPipe 3D姿态识别模型加载
+    const interval = setInterval(() => {
+      setLoadProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval)
+          setModelLoaded(true)
+          return 100
+        }
+        return p + Math.random() * 15
+      })
+    }, 200)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
+      {/* Camera Icon */}
+      <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-5 border border-slate-700">
+        <Camera className="w-10 h-10 text-cyan-500" />
+      </div>
+      
+      <h3 className="text-white font-semibold text-lg mb-2">准备好开始了吗？</h3>
+      
+      {!modelLoaded ? (
+        <>
+          <p className="text-slate-400 text-sm text-center mb-4">
+            正在加载 3D 姿态识别模型...
+          </p>
+          {/* Loading progress */}
+          <div className="w-full max-w-[200px] mb-6">
+            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-cyan-500 transition-all duration-300"
+                style={{ width: `${Math.min(loadProgress, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-500 text-center mt-2">
+              {Math.floor(Math.min(loadProgress, 100))}%
+            </p>
+          </div>
+          <Button 
+            disabled 
+            className="bg-slate-700 text-slate-400 h-12 px-8 rounded-xl text-sm cursor-not-allowed"
+          >
+            请等待模型加载...
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-slate-400 text-sm text-center mb-6">
+            模型加载完成，点击下方按钮开启摄像头
+          </p>
+          <Button 
+            onClick={onStart} 
+            className="bg-[#2066A2] hover:bg-[#1a5485] text-white h-12 px-8 rounded-xl text-sm font-medium"
+          >
+            <Camera className="w-5 h-5 mr-2" />
+            开启摄像头
+          </Button>
+        </>
+      )}
+      
+      {/* 底部提示 */}
+      <button className="mt-6 text-sm text-slate-500 underline">
+        没视频？使用 2D 模拟模式
+      </button>
+    </div>
+  )
+})
 
 export default function AssessmentPage() {
   const router = useRouter()
-  const [currentExercise, setCurrentExercise] = useState(0)
+  const [selectedIdx, setSelectedIdx] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentRep, setCurrentRep] = useState(0)
+  const [isMuted, setIsMuted] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [show3D, setShow3D] = useState(false)
   const [score, setScore] = useState(0)
-  const [feedback, setFeedback] = useState("")
+  const [reps, setReps] = useState(0)
   const [showComplete, setShowComplete] = useState(false)
-  const [cameraPermission, setCameraPermission] = useState<"granted" | "denied" | "prompt">("prompt")
-  const [show3DView, setShow3DView] = useState(true)
-  const [is3DFullscreen, setIs3DFullscreen] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  
-  const [kneeMetrics, setKneeMetrics] = useState<KneeMetrics>({
-    flexion: 0, valgus: 0, rotation: 0, velocity: 0, stability: 85,
-  })
 
-  const exercise = EXERCISES[currentExercise]
+  const exercise = EXERCISES[selectedIdx]
 
+  // 模拟评估进度
   useEffect(() => {
-    const requestCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 480 } })
-        if (videoRef.current) videoRef.current.srcObject = stream
-        setCameraPermission("granted")
-      } catch {
-        setCameraPermission("denied")
-      }
-    }
-    requestCamera()
-    return () => {
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop())
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        const time = Date.now() / 1000
-        const baseFlexion = exercise.targetAngle * 0.8
-        const newFlexion = Math.max(0, Math.min(140, baseFlexion + Math.sin(time * 2) * 20))
-        const newValgus = Math.sin(time * 1.5) * 5
-        const newRotation = Math.sin(time * 0.8) * 8
-        const newVelocity = Math.abs(Math.cos(time * 2) * 45) + 10
-        const newStability = Math.max(60, 85 - Math.abs(newValgus) - Math.abs(newRotation) / 2)
-
-        setKneeMetrics({ flexion: newFlexion, valgus: newValgus, rotation: newRotation, velocity: newVelocity, stability: newStability })
-        
-        const angleError = Math.abs(newFlexion - exercise.targetAngle)
-        const newScore = Math.max(0, Math.floor(100 - angleError * 0.5 - Math.abs(newValgus) * 2))
-        setScore((prev) => Math.floor((prev * 0.7 + newScore * 0.3)))
-        
-        if (newFlexion < exercise.targetAngle - 20) setFeedback("请再弯曲一些")
-        else if (newFlexion > exercise.targetAngle + 20) setFeedback("弯曲幅度过大")
-        else if (Math.abs(newValgus) > 8) setFeedback("注意膝关节对位")
-        else if (newVelocity > 50) setFeedback("动作太快")
-        else setFeedback("动作标准")
-        
-        if (Math.random() > 0.92 && currentRep < exercise.reps) setCurrentRep((prev) => prev + 1)
-      }, 150)
-    }
-    
+    if (!isPlaying || !showCamera) return
+    const interval = setInterval(() => {
+      setScore(s => Math.min(95, s + Math.random() * 3))
+      if (Math.random() > 0.85) setReps(r => r + 1)
+    }, 500)
     return () => clearInterval(interval)
-  }, [isPlaying, exercise, currentRep])
+  }, [isPlaying, showCamera])
 
   useEffect(() => {
-    if (currentRep >= exercise.reps && isPlaying) {
+    if (reps >= 5) {
       setIsPlaying(false)
-      if (currentExercise < EXERCISES.length - 1) {
-        setTimeout(() => {
-          setCurrentExercise(currentExercise + 1)
-          setCurrentRep(0)
-          setScore(0)
-        }, 1500)
-      } else {
-        setShowComplete(true)
-      }
+      setShowComplete(true)
     }
-  }, [currentRep, exercise.reps, currentExercise, isPlaying])
+  }, [reps])
 
-  const handleStart = useCallback(() => { setIsPlaying(true); setFeedback("开始检测...") }, [])
-  const handlePause = useCallback(() => { setIsPlaying(false); setFeedback("") }, [])
-  const handleRetry = useCallback(() => {
-    setCurrentRep(0); setScore(0); setIsPlaying(false); setFeedback("")
-    setKneeMetrics({ flexion: 0, valgus: 0, rotation: 0, velocity: 0, stability: 85 })
-  }, [])
-
-  const handleSkip = useCallback(() => {
-    setIsPlaying(false)
-    if (currentExercise < EXERCISES.length - 1) {
-      setCurrentExercise(currentExercise + 1)
-      setCurrentRep(0); setScore(0); setFeedback("")
-    } else setShowComplete(true)
-  }, [currentExercise])
+  const handleStart = useCallback(() => { setShowCamera(true); setIsPlaying(true) }, [])
+  const handleReset = useCallback(() => { setReps(0); setScore(0); setIsPlaying(false) }, [])
 
   const handleComplete = useCallback(() => {
     localStorage.setItem("assessmentResult", JSON.stringify({
-      exercises: EXERCISES.map((ex, i) => ({ ...ex, completed: i <= currentExercise, score: i === currentExercise ? score : 85 + Math.floor(Math.random() * 10) })),
-      kneeMetrics: { maxFlexion: kneeMetrics.flexion, avgStability: kneeMetrics.stability, valgusRange: Math.abs(kneeMetrics.valgus) },
-      totalScore: Math.floor((score + 85 + 90) / 3),
+      exercise: exercise.name, score: Math.floor(score), reps,
       completedAt: new Date().toISOString(),
     }))
     router.push("/report")
-  }, [currentExercise, score, kneeMetrics, router])
-
-  const getStatusColor = (value: number, thresholds: { good: number; warning: number }) => {
-    if (value <= thresholds.good) return "text-accent"
-    if (value <= thresholds.warning) return "text-yellow-500"
-    return "text-destructive"
-  }
-
-  if (cameraPermission === "denied") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center mb-3">
-          <AlertCircle className="w-7 h-7 text-destructive" />
-        </div>
-        <h2 className="text-lg font-semibold mb-2">需要摄像头权限</h2>
-        <p className="text-sm text-muted-foreground text-center mb-4">动作评估需要摄像头来追踪您的动作</p>
-        <Button onClick={() => router.back()} className="h-10">返回</Button>
-      </div>
-    )
-  }
-
-  if (is3DFullscreen) {
-    return (
-      <div className="fixed inset-0 bg-slate-900 z-50 flex flex-col">
-        <header className="bg-slate-800 border-b border-slate-700 shrink-0">
-          <div className="flex items-center justify-between h-12 px-4">
-            <h1 className="font-semibold text-white text-sm">膝关节三维模型</h1>
-            <Button variant="ghost" size="icon" className="w-8 h-8 text-white" onClick={() => setIs3DFullscreen(false)}>
-              <Minimize2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </header>
-        <div className="flex-1 relative">
-          <Suspense fallback={<div className="w-full h-full bg-slate-800" />}>
-            <Knee3DModel flexionAngle={kneeMetrics.flexion} valgusAngle={kneeMetrics.valgus} rotationAngle={kneeMetrics.rotation} isAnimating={isPlaying} className="w-full h-full" />
-          </Suspense>
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <Card className="bg-slate-800/95 backdrop-blur p-3 border-slate-700">
-              <div className="grid grid-cols-4 gap-3 text-center">
-                <div>
-                  <p className="text-[10px] text-slate-400 mb-0.5">屈曲角度</p>
-                  <p className="text-lg font-bold text-primary">{kneeMetrics.flexion.toFixed(1)}°</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 mb-0.5">外翻角度</p>
-                  <p className={`text-lg font-bold ${getStatusColor(Math.abs(kneeMetrics.valgus), { good: 5, warning: 10 })}`}>{kneeMetrics.valgus.toFixed(1)}°</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 mb-0.5">旋转角度</p>
-                  <p className="text-lg font-bold text-white">{kneeMetrics.rotation.toFixed(1)}°</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 mb-0.5">稳定性</p>
-                  <p className={`text-lg font-bold ${getStatusColor(100 - kneeMetrics.stability, { good: 15, warning: 30 })}`}>{kneeMetrics.stability.toFixed(0)}%</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  }, [exercise.name, score, reps, router])
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="bg-card border-b border-border shrink-0">
-        <div className="flex items-center h-12 px-4">
-          <button onClick={() => router.back()} className="p-2 -ml-2"><ArrowLeft className="w-5 h-5" /></button>
-          <h1 className="flex-1 text-center font-semibold text-base">动作评估</h1>
-          <span className="text-sm text-muted-foreground">{currentExercise + 1}/{EXERCISES.length}</span>
+    <div className="min-h-screen bg-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 relative z-10">
+        <button onClick={() => router.back()} className="p-1.5 text-white/70">
+          <X className="w-5 h-5" />
+        </button>
+        <div className="flex bg-slate-800 rounded-lg p-0.5">
+          {EXERCISES.map((ex, i) => (
+            <button
+              key={ex.id}
+              onClick={() => { setSelectedIdx(i); handleReset() }}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                selectedIdx === i ? "bg-cyan-500 text-white" : "text-slate-400"
+              }`}
+            >
+              {ex.name}
+            </button>
+          ))}
         </div>
+        <div className="w-8" />
       </header>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="relative aspect-[4/3] bg-slate-900">
-          <video ref={videoRef} autoPlay playsInline muted className={`absolute inset-0 w-full h-full object-cover transition-opacity ${show3DView ? 'opacity-0' : 'opacity-100'}`} />
-          
-          {show3DView && (
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 to-slate-800">
-              <Suspense fallback={<div className="w-full h-full" />}>
-                <Knee3DModel flexionAngle={kneeMetrics.flexion} valgusAngle={kneeMetrics.valgus} rotationAngle={kneeMetrics.rotation} isAnimating={isPlaying} className="w-full h-full" />
-              </Suspense>
-            </div>
-          )}
-          
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
-              <Card className="bg-card/90 backdrop-blur p-2 pointer-events-auto">
-                <p className="text-[10px] text-muted-foreground">当前动作</p>
-                <p className="font-semibold text-xs">{exercise.name}</p>
-              </Card>
-              
-              <div className="flex gap-1.5 pointer-events-auto">
-                <Button variant="secondary" size="icon" className="w-8 h-8 bg-card/90" onClick={() => setShow3DView(!show3DView)}>
-                  <RotateCw className="w-4 h-4" />
-                </Button>
-                {show3DView && (
-                  <Button variant="secondary" size="icon" className="w-8 h-8 bg-card/90" onClick={() => setIs3DFullscreen(true)}>
-                    <Maximize2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-              
-              <Card className="bg-card/90 backdrop-blur p-2">
-                <p className="text-[10px] text-muted-foreground text-center">评分</p>
-                <p className="text-xl font-bold text-primary text-center">{score}</p>
-              </Card>
-            </div>
-            
-            {isPlaying && (
-              <div className="absolute left-2 top-14">
-                <Card className="bg-card/90 backdrop-blur p-2 space-y-1.5 min-w-[80px]">
-                  <div>
-                    <p className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Activity className="w-2.5 h-2.5" /> 屈曲</p>
-                    <p className="text-base font-bold text-primary">{kneeMetrics.flexion.toFixed(1)}°</p>
-                  </div>
-                  <div className="border-t border-border pt-1.5">
-                    <p className="text-[9px] text-muted-foreground">外翻</p>
-                    <p className={`text-xs font-semibold ${getStatusColor(Math.abs(kneeMetrics.valgus), { good: 5, warning: 10 })}`}>{kneeMetrics.valgus.toFixed(1)}°</p>
-                  </div>
-                  <div className="border-t border-border pt-1.5">
-                    <p className="text-[9px] text-muted-foreground">旋转</p>
-                    <p className="text-xs font-semibold">{kneeMetrics.rotation.toFixed(1)}°</p>
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {isPlaying && (
-              <div className="absolute right-2 top-14">
-                <Card className="bg-card/90 backdrop-blur p-2 min-w-[70px]">
-                  <p className="text-[9px] text-muted-foreground text-center mb-1">稳定性</p>
-                  <div className="relative w-12 h-12 mx-auto">
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted" />
-                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray={`${kneeMetrics.stability * 1.26} 126`} className={kneeMetrics.stability > 80 ? "text-accent" : kneeMetrics.stability > 60 ? "text-yellow-500" : "text-destructive"} />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">{kneeMetrics.stability.toFixed(0)}%</span>
-                  </div>
-                </Card>
-              </div>
-            )}
-            
-            {feedback && (
-              <div className="absolute bottom-20 left-2 right-2">
-                <Card className={`p-2 text-center ${feedback.includes("标准") ? "bg-accent/90 text-accent-foreground" : "bg-card/90"} backdrop-blur`}>
-                  <span className="font-medium text-xs">{feedback}</span>
-                </Card>
-              </div>
-            )}
-            
-            <div className="absolute bottom-10 left-2 right-2">
-              <Card className="bg-card/90 backdrop-blur p-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px]">完成进度</span>
-                  <span className="text-[10px] font-medium">{currentRep}/{exercise.reps}</span>
-                </div>
-                <Progress value={(currentRep / exercise.reps) * 100} className="h-1" />
-              </Card>
-            </div>
+      {/* Demo Area */}
+      <div className="flex-1 relative bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900">
+        {/* Info */}
+        <div className="absolute top-2 left-4 z-10">
+          <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-medium">
+            {exercise.name}
+            <span className="text-slate-500 text-xs">(Level {exercise.level})</span>
           </div>
+          <p className="text-slate-400 text-xs mt-0.5">{exercise.description}</p>
         </div>
 
-        <div className="bg-card p-3 border-t border-border shrink-0">
-          <p className="text-xs text-muted-foreground text-center mb-3">{exercise.description}</p>
-          <div className="flex items-center justify-center gap-3">
-            <Button variant="outline" size="icon" className="w-10 h-10 rounded-full" onClick={handleRetry}><RotateCcw className="w-4 h-4" /></Button>
-            <Button size="icon" className="w-14 h-14 rounded-full" onClick={isPlaying ? handlePause : handleStart}>
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-            </Button>
-            <Button variant="outline" size="icon" className="w-10 h-10 rounded-full" onClick={handleSkip}><SkipForward className="w-4 h-4" /></Button>
+        {/* 3D Toggle */}
+        <button
+          onClick={() => setShow3D(!show3D)}
+          className="absolute top-2 right-4 z-10 px-2 py-1 bg-slate-800/80 rounded text-[10px] text-slate-300 border border-slate-700"
+        >
+          {show3D ? "2D骨架" : "3D膝关节"}
+        </button>
+
+        {/* Skeleton / 3D */}
+        <div className="absolute inset-0 flex items-center justify-center pt-10 pb-16">
+          {show3D ? (
+            <div className="w-full h-full max-w-[200px]">
+              <Suspense fallback={null}>
+                <Knee3DModel flexionAngle={45 + (isPlaying ? Math.sin(Date.now()/500)*20 : 0)} isAnimating={isPlaying} />
+              </Suspense>
+            </div>
+          ) : (
+            <div className="w-40 h-56">
+              <SkeletonFigure animate={isPlaying && showCamera} exerciseType={exercise.id} />
+            </div>
+          )}
+        </div>
+
+        {/* Score (when playing) */}
+        {showCamera && (
+          <div className="absolute top-2 right-4 mt-8">
+            <Card className="bg-slate-800/90 border-slate-700 p-2 text-center min-w-[60px]">
+              <p className="text-[10px] text-slate-400">评分</p>
+              <p className="text-xl font-bold text-cyan-400">{Math.floor(score)}</p>
+            </Card>
           </div>
+        )}
+
+        {/* Controls */}
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+          <button onClick={() => setIsPlaying(!isPlaying)} className="p-2 bg-slate-800/80 rounded-full border border-slate-700">
+            {isPlaying ? <Pause className="w-4 h-4 text-cyan-400" /> : <Play className="w-4 h-4 text-cyan-400" />}
+          </button>
+          <button onClick={handleReset} className="p-2 bg-slate-800/80 rounded-full border border-slate-700">
+            <RotateCcw className="w-4 h-4 text-slate-400" />
+          </button>
+          <button onClick={() => setIsMuted(!isMuted)} className="p-2 bg-slate-800/80 rounded-full border border-slate-700">
+            {isMuted ? <VolumeX className="w-4 h-4 text-slate-400" /> : <Volume2 className="w-4 h-4 text-slate-400" />}
+          </button>
         </div>
       </div>
 
+      {/* Camera / Start Section */}
+      <div className="h-[42%] bg-slate-950 relative">
+        {showCamera ? (
+          <div className="absolute inset-0 flex flex-col">
+            {/* Camera placeholder */}
+            <div className="flex-1 flex items-center justify-center relative">
+              <Camera className="w-10 h-10 text-slate-700" />
+              <p className="absolute bottom-4 text-slate-500 text-xs">摄像头画面</p>
+              {/* Guide overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-28 h-40 border border-dashed border-cyan-500/30 rounded-lg" />
+              </div>
+            </div>
+            {/* Progress */}
+            <div className="p-3 bg-slate-900 border-t border-slate-800">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                <span>完成进度</span>
+                <span>{reps}/5 次</span>
+              </div>
+              <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-cyan-500 transition-all" style={{ width: `${(reps/5)*100}%` }} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <ModelLoadingSection 
+            exercise={exercise} 
+            onStart={handleStart} 
+          />
+        )}
+      </div>
+
+      {/* Complete Modal */}
       {showComplete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-xs p-5 text-center">
-            <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3">
-              <CheckCircle className="w-7 h-7 text-accent" />
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-[280px] p-5 text-center bg-slate-800 border-slate-700">
+            <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="w-6 h-6 text-cyan-400" />
             </div>
-            <h2 className="text-lg font-semibold mb-2">评估完成</h2>
-            <p className="text-sm text-muted-foreground mb-4">已完成 {EXERCISES.length} 项动作评估</p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="bg-muted p-2 rounded-lg">
-                <p className="text-xl font-bold text-primary">{score}</p>
-                <p className="text-[10px] text-muted-foreground">综合评分</p>
+            <h2 className="text-white font-semibold mb-1">评估完成</h2>
+            <p className="text-slate-400 text-xs mb-4">已完成 {exercise.name} 评估</p>
+            <div className="flex gap-2 mb-4">
+              <div className="flex-1 bg-slate-900 p-2 rounded-lg">
+                <p className="text-xl font-bold text-cyan-400">{Math.floor(score)}</p>
+                <p className="text-[10px] text-slate-500">评分</p>
               </div>
-              <div className="bg-muted p-2 rounded-lg">
-                <p className="text-xl font-bold text-accent">{kneeMetrics.stability.toFixed(0)}%</p>
-                <p className="text-[10px] text-muted-foreground">稳定性</p>
-              </div>
-              <div className="bg-muted p-2 rounded-lg">
-                <p className="text-xl font-bold">{kneeMetrics.flexion.toFixed(0)}°</p>
-                <p className="text-[10px] text-muted-foreground">最大屈曲</p>
+              <div className="flex-1 bg-slate-900 p-2 rounded-lg">
+                <p className="text-xl font-bold text-white">{reps}</p>
+                <p className="text-[10px] text-slate-500">完成次数</p>
               </div>
             </div>
-            <Button onClick={handleComplete} className="w-full h-10">查看详细报告</Button>
+            <Button onClick={handleComplete} className="w-full h-10 bg-cyan-500 hover:bg-cyan-600 rounded-xl text-sm">
+              查看报告
+            </Button>
           </Card>
         </div>
       )}

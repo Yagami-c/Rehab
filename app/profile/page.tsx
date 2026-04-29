@@ -75,7 +75,13 @@ export default function ProfilePage() {
       weight,
       goals,
     }))
-    router.push("/home")
+    // 检查是否已填写病史，如果没有则跳转到病史页面
+    const medicalHistoryCompleted = localStorage.getItem("medicalHistoryCompleted")
+    if (!medicalHistoryCompleted) {
+      router.push("/medical-history")
+    } else {
+      router.push("/home")
+    }
   }
 
   const isValid = nickname && gender && height && weight && goals.length > 0

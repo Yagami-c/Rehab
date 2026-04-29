@@ -55,29 +55,34 @@ export default function LoginPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Logo Area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-6">
-        {/* Logo */}
-        <div className="mb-4">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+      {/* Header with Logo Card */}
+      <div className="pt-16 pb-6 flex flex-col items-center px-6">
+        {/* Logo Card - 参照Figma设计 */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 w-28 h-28 flex items-center justify-center">
           <Image 
             src="/logo.jpg" 
             alt="光年瑞康 Aiyovita" 
-            width={180} 
+            width={80} 
             height={80}
             className="object-contain"
             priority
           />
         </div>
 
-        <p className="text-sm text-gray-500 mb-8">智能康复评估服务平台</p>
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">康复评估平台</h1>
+        <p className="text-sm text-gray-500">科学的数字康复服务</p>
+      </div>
 
-        {/* Login Method Tabs */}
-        <div className="w-full max-w-sm">
+      {/* Login Form */}
+      <div className="flex-1 px-6">
+        <div className="bg-white rounded-2xl shadow-sm p-5 max-w-sm mx-auto">
+          {/* Login Method Tabs */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
             <button
               onClick={() => setLoginMethod("phone")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
                 loginMethod === "phone"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500"
@@ -88,7 +93,7 @@ export default function LoginPage() {
             </button>
             <button
               onClick={() => setLoginMethod("email")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${
                 loginMethod === "email"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500"
@@ -101,33 +106,33 @@ export default function LoginPage() {
 
           {/* Phone Login */}
           {loginMethod === "phone" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">手机号码</label>
+                <label className="block text-sm text-gray-600 mb-1.5">手机号码</label>
                 <Input
                   type="tel"
-                  placeholder="13800138000"
+                  placeholder="请输入手机号"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="h-10 bg-gray-50 border-gray-200 rounded-lg"
+                  className="h-11 bg-gray-50 border-0 rounded-xl text-base"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">验证码</label>
+                <label className="block text-sm text-gray-600 mb-1.5">验证码</label>
                 <div className="flex gap-2">
                   <Input
                     type="text"
-                    placeholder="输入验证码"
+                    placeholder="请输入验证码"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="flex-1 h-10 bg-gray-50 border-gray-200 rounded-lg"
+                    className="flex-1 h-11 bg-gray-50 border-0 rounded-xl text-base"
                     maxLength={6}
                   />
                   <Button
                     variant="outline"
                     onClick={sendCode}
                     disabled={countdown > 0}
-                    className="px-3 h-10 rounded-lg border-[#2066A2] text-[#2066A2] hover:bg-[#2066A2]/5 text-sm"
+                    className="px-4 h-11 rounded-xl border-[#2066A2] text-[#2066A2] hover:bg-[#2066A2]/5 text-sm whitespace-nowrap"
                   >
                     {countdown > 0 ? `${countdown}s` : "获取验证码"}
                   </Button>
@@ -138,26 +143,26 @@ export default function LoginPage() {
 
           {/* Email Login */}
           {loginMethod === "email" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">邮箱地址</label>
+                <label className="block text-sm text-gray-600 mb-1.5">邮箱地址</label>
                 <Input
                   type="email"
-                  placeholder="example@email.com"
+                  placeholder="请输入邮箱"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 bg-gray-50 border-gray-200 rounded-lg"
+                  className="h-11 bg-gray-50 border-0 rounded-xl text-base"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">密码</label>
+                <label className="block text-sm text-gray-600 mb-1.5">密码</label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="输入密码"
+                    placeholder="请输入密码"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-10 bg-gray-50 border-gray-200 rounded-lg pr-10"
+                    className="h-11 bg-gray-50 border-0 rounded-xl text-base pr-10"
                   />
                   <button
                     type="button"
@@ -195,27 +200,28 @@ export default function LoginPage() {
           <Button
             onClick={handleLogin}
             disabled={!canLogin}
-            className="w-full h-10 mt-4 rounded-lg text-sm font-medium bg-[#2066A2] hover:bg-[#1a5585]"
+            className="w-full h-11 mt-5 rounded-xl text-base font-medium bg-[#2066A2] hover:bg-[#1a5585] disabled:bg-gray-300"
           >
             登录
           </Button>
+        </div>
 
-          {/* Social Login Divider */}
-          <div className="flex items-center gap-3 my-6">
+        {/* Social Login */}
+        <div className="max-w-sm mx-auto mt-6">
+          <div className="flex items-center gap-3 mb-5">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-xs text-gray-400">其他方式登录</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {/* Social Login Buttons */}
-          <div className="flex justify-center gap-6">
+          <div className="flex justify-center gap-8">
             <button
               onClick={() => handleSocialLogin("wechat")}
               disabled={!agreed}
-              className="flex flex-col items-center gap-1.5 disabled:opacity-50"
+              className="flex flex-col items-center gap-2 disabled:opacity-50"
             >
-              <div className="w-12 h-12 rounded-full bg-[#07C160] flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white fill-current">
+              <div className="w-14 h-14 rounded-full bg-[#07C160] flex items-center justify-center shadow-sm">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 text-white fill-current">
                   <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.328.328 0 00.186-.059l1.808-1.044a.59.59 0 01.587-.023c1.01.416 2.135.649 3.32.649.202 0 .401-.008.599-.022-.189-.544-.293-1.118-.293-1.714 0-3.635 3.477-6.587 7.768-6.587.269 0 .534.012.796.035C16.628 4.593 13.009 2.188 8.691 2.188zm-2.29 4.401a.987.987 0 11.001 1.973.987.987 0 01-.001-1.973zm4.867 0a.987.987 0 110 1.974.987.987 0 010-1.974zm4.774 4.532c-3.688 0-6.687 2.505-6.687 5.594 0 3.088 2.999 5.593 6.687 5.593.691 0 1.358-.089 1.988-.252a.49.49 0 01.486.019l1.46.843a.266.266 0 00.15.047.237.237 0 00.236-.238c0-.058-.023-.116-.039-.172l-.315-1.197a.488.488 0 01.176-.553c1.488-1.094 2.445-2.73 2.445-4.562.001-3.089-2.998-5.593-6.687-5.593zm-2.11 3.161a.789.789 0 11.001 1.578.789.789 0 01-.001-1.578zm4.221 0a.789.789 0 110 1.577.789.789 0 010-1.577z"/>
                 </svg>
               </div>
@@ -225,10 +231,10 @@ export default function LoginPage() {
             <button
               onClick={() => handleSocialLogin("whatsapp")}
               disabled={!agreed}
-              className="flex flex-col items-center gap-1.5 disabled:opacity-50"
+              className="flex flex-col items-center gap-2 disabled:opacity-50"
             >
-              <div className="w-12 h-12 rounded-full bg-[#25D366] flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm">
+                <MessageCircle className="w-7 h-7 text-white" />
               </div>
               <span className="text-xs text-gray-500">WhatsApp</span>
             </button>
@@ -237,7 +243,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <div className="py-4 text-center">
+      <div className="py-5 text-center">
         <p className="text-xs text-gray-400">光年瑞康 Aiyovita v1.0</p>
       </div>
 
@@ -273,7 +279,7 @@ export default function LoginPage() {
                   setAgreed(true)
                   setShowAgreement(null)
                 }}
-                className="w-full h-10 rounded-lg bg-[#2066A2] hover:bg-[#1a5585]"
+                className="w-full h-11 rounded-xl bg-[#2066A2] hover:bg-[#1a5585]"
               >
                 <Check className="w-4 h-4 mr-2" />
                 我已阅读并同意

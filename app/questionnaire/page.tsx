@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, AlertTriangle, CheckCircle2, XCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
 import { Card } from "@/components/ui/card"
 
 // PAD模式参数库
@@ -79,14 +78,25 @@ const BODY_TYPES = [
   { id: "thick", label: "偏厚", delta: 1, desc: "软组织较厚，需要更高负压" },
 ]
 
+// 疼痛等级表情
+const PAIN_EMOJIS = [
+  { range: [0, 0], emoji: "😄", label: "无痛", color: "#22C55E" },
+  { range: [1, 2], emoji: "😊", label: "轻微疼痛", color: "#84CC16" },
+  { range: [3, 4], emoji: "🙂", label: "轻度疼痛", color: "#EAB308" },
+  { range: [5, 6], emoji: "😐", label: "中度疼痛", color: "#F97316" },
+  { range: [7, 8], emoji: "😣", label: "重度疼痛", color: "#EF4444" },
+  { range: [9, 10], emoji: "😫", label: "剧烈疼痛", color: "#DC2626" },
+]
+
 export default function QuestionnairePage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   
   // 评估数据
   const [redFlags, setRedFlags] = useState<string[]>([])
+  const [deviceConfirmed, setDeviceConfirmed] = useState(false)
   const [stiffness, setStiffness] = useState<number | null>(null)
-  const [squatPain, setSquatPain] = useState([5])
+  const [squatPain, setSquatPain] = useState(0)
   const [painTriggers, setPainTriggers] = useState<string[]>([])
   const [bodyType, setBodyType] = useState<string | null>(null)
   const [isFirstTime, setIsFirstTime] = useState<boolean | null>(null)
@@ -98,7 +108,7 @@ export default function QuestionnairePage() {
   const [showRedFlagAlert, setShowRedFlagAlert] = useState(false)
   const [showPainAlert, setShowPainAlert] = useState(false)
 
-  const totalSteps = 6
+  const totalSteps = 7 // 增加一步设备确认
 
   const toggleRedFlag = (id: string) => {
     if (id === "none") {
@@ -126,6 +136,16 @@ export default function QuestionnairePage() {
     }
   }
 
+  const getPainColor = (value: number) => {
+    const emoji = PAIN_EMOJIS.find(e => value >= e.range[0] && value <= e.range[1])
+    return emoji?.color || "#22C55E"
+  }
+
+  const getPainLabel = (value: number) => {
+    const emoji = PAIN_EMOJIS.find(e => value >= e.range[0] && value <= e.range[1])
+    return emoji?.label || "无痛"
+  }
+
   const handleNext = () => {
     // Step 1: 红旗征检查
     if (step === 1) {
@@ -137,31 +157,35 @@ export default function QuestionnairePage() {
       }
     }
     
-    // Step 2: 僵硬程度 -> 设置初始等级
-    if (step === 2 && stiffness !== null) {
+    // Step 2: 设备佩戴确认
+    if (step === 2) {
+      if (!deviceConfirmed) return
+    }
+    
+    // Step 3: 僵硬程度 -> 设置初始等级
+    if (step === 3 && stiffness !== null) {
       if (stiffness === 0) setLevel(2)
       else if (stiffness === 1) setLevel(3)
       else setLevel(4)
     }
     
-    // Step 3: 下蹲疼痛评估
-    if (step === 3) {
-      const pain = squatPain[0]
-      if (pain >= 7) {
+    // Step 4: 下蹲疼痛评估
+    if (step === 4) {
+      if (squatPain >= 7) {
         setShowPainAlert(true)
         return
       }
-      adjustLevelByPain(pain)
+      adjustLevelByPain(squatPain)
     }
     
-    // Step 4: 体型评估
-    if (step === 4 && bodyType) {
+    // Step 5: 体型评估
+    if (step === 5 && bodyType) {
       const delta = BODY_TYPES.find(b => b.id === bodyType)?.delta || 0
       setLevel(prev => Math.max(1, Math.min(6, prev + delta)))
     }
     
-    // Step 5: 初次使用限制
-    if (step === 5 && isFirstTime !== null) {
+    // Step 6: 初次使用限制
+    if (step === 6 && isFirstTime !== null) {
       if (isFirstTime) {
         setLevel(prev => Math.min(prev, 2))
       }
@@ -178,7 +202,7 @@ export default function QuestionnairePage() {
         mode,
         params: PAD_MODES[mode],
         stiffness,
-        squatPain: squatPain[0],
+        squatPain,
         painTriggers,
         bodyType,
         isFirstTime,
@@ -199,11 +223,12 @@ export default function QuestionnairePage() {
   const canProceed = () => {
     switch (step) {
       case 1: return redFlags.length > 0
-      case 2: return stiffness !== null
-      case 3: return true
-      case 4: return bodyType !== null
-      case 5: return isFirstTime !== null
-      case 6: return true
+      case 2: return deviceConfirmed
+      case 3: return stiffness !== null
+      case 4: return true
+      case 5: return bodyType !== null
+      case 6: return isFirstTime !== null
+      case 7: return true
       default: return false
     }
   }
@@ -221,8 +246,10 @@ export default function QuestionnairePage() {
           <button onClick={() => step > 1 ? setStep(step - 1) : router.back()} className="p-2 -ml-2">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="flex-1 text-center font-semibold text-base">PAD智能评估</h1>
-          <span className="text-sm text-muted-foreground">{step}/{totalSteps}</span>
+          <h1 className="flex-1 text-center font-semibold text-base">健康评估 ({step}/{totalSteps})</h1>
+          <button onClick={() => router.push("/home")} className="text-sm text-muted-foreground">
+            取消
+          </button>
         </div>
         <div className="h-1 bg-muted">
           <div
@@ -236,7 +263,7 @@ export default function QuestionnairePage() {
         {/* Step 1: 红旗征筛查 */}
         {step === 1 && (
           <div>
-            <h2 className="text-base font-semibold mb-1">安全筛查（红旗征）</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">安全筛查</h2>
             <p className="text-sm text-muted-foreground mb-4">
               以下情况是否符合你？（可多选）
             </p>
@@ -263,9 +290,7 @@ export default function QuestionnairePage() {
                         : "border-muted-foreground/30"
                     }`}>
                       {redFlags.includes(flag.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <Check className="w-3 h-3 text-white" />
                       )}
                     </div>
                     <span className="font-medium text-sm">{flag.label}</span>
@@ -276,10 +301,40 @@ export default function QuestionnairePage() {
           </div>
         )}
 
-        {/* Step 2: 僵硬程度评估 */}
+        {/* Step 2: 设备佩戴确认 */}
         {step === 2 && (
           <div>
-            <h2 className="text-base font-semibold mb-1">僵硬/紧张程度评估</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">设备佩戴确认</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              请确保设备已正确佩戴在膝盖上。
+            </p>
+
+            <Card
+              onClick={() => setDeviceConfirmed(!deviceConfirmed)}
+              className={`p-8 cursor-pointer transition-all active:scale-[0.98] flex flex-col items-center justify-center ${
+                deviceConfirmed
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-border border-dashed"
+              }`}
+            >
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
+                deviceConfirmed
+                  ? "bg-primary"
+                  : "bg-muted"
+              }`}>
+                <Check className={`w-8 h-8 ${deviceConfirmed ? "text-white" : "text-muted-foreground"}`} />
+              </div>
+              <p className="text-base font-medium text-center">
+                {deviceConfirmed ? "已确认佩戴" : "点击确认已佩戴"}
+              </p>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 3: 僵硬程度评估 */}
+        {step === 3 && (
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">僵硬/紧张程度评估</h2>
             <p className="text-sm text-muted-foreground mb-4">
               你是否感觉膝盖有点紧或活动不开？
             </p>
@@ -315,68 +370,109 @@ export default function QuestionnairePage() {
           </div>
         )}
 
-        {/* Step 3: 下蹲疼痛评分 */}
-        {step === 3 && (
-          <div className="space-y-4">
+        {/* Step 4: 下蹲疼痛评分 - 优化UI */}
+        {step === 4 && (
+          <div className="space-y-6">
             <div>
-              <h2 className="text-base font-semibold mb-1">下蹲疼痛评分</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                当你下蹲时，膝盖不适程度是？（0-10分）
+              <h2 className="text-lg font-bold text-gray-900 mb-1">下蹲疼痛评分</h2>
+              <p className="text-sm text-muted-foreground">
+                当您下蹲时，膝盖不适程度是？（0-10分）
               </p>
             </div>
 
-            <Card className="p-4">
-              <div className="text-center mb-5">
-                <span className="text-4xl font-bold text-primary">{squatPain[0]}</span>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {squatPain[0] <= 2 ? "轻微不适" : 
-                   squatPain[0] <= 4 ? "轻度疼痛" :
-                   squatPain[0] <= 6 ? "中度疼痛" :
-                   squatPain[0] <= 8 ? "较重疼痛" : "剧烈疼痛"}
-                </p>
-              </div>
-              
-              <Slider
-                value={squatPain}
-                onValueChange={setSquatPain}
-                min={0}
-                max={10}
-                step={1}
-                className="mb-3"
-              />
-              
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>0 无痛</span>
-                <span>5 中度</span>
-                <span>10 剧痛</span>
-              </div>
-            </Card>
+            {/* 大数字显示 */}
+            <div className="text-center py-4">
+              <span 
+                className="text-6xl font-bold"
+                style={{ color: getPainColor(squatPain) }}
+              >
+                {squatPain}
+              </span>
+            </div>
 
-            <div>
-              <h3 className="font-medium text-sm mb-2">以下哪些动作会让你膝盖不舒服？</h3>
+            {/* 渐变滑块 */}
+            <div className="px-2">
+              <div className="relative">
+                {/* 渐变背景条 */}
+                <div 
+                  className="h-2 rounded-full"
+                  style={{
+                    background: "linear-gradient(to right, #22C55E 0%, #84CC16 20%, #EAB308 40%, #F97316 60%, #EF4444 80%, #DC2626 100%)"
+                  }}
+                />
+                {/* 滑块指示器 */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-4 border-white shadow-lg cursor-pointer"
+                  style={{ 
+                    left: `calc(${squatPain * 10}% - 12px)`,
+                    backgroundColor: getPainColor(squatPain)
+                  }}
+                />
+                {/* 透明滑块用于交互 */}
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  value={squatPain}
+                  onChange={(e) => setSquatPain(Number(e.target.value))}
+                  className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                />
+              </div>
+              
+              {/* 刻度数字 */}
+              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <span 
+                    key={n} 
+                    className={`w-4 text-center ${squatPain === n ? "font-bold text-foreground" : ""}`}
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 表情等级 */}
+            <div className="flex justify-between px-1">
+              {PAIN_EMOJIS.map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center">
+                  <span className="text-2xl mb-1">{item.emoji}</span>
+                  <span 
+                    className="text-xs text-center leading-tight"
+                    style={{ color: item.color }}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* 疼痛诱因 */}
+            <div className="pt-4">
+              <h3 className="font-medium text-sm mb-3">以下哪些动作会让您膝盖不舒服？（可多选）</h3>
               <div className="grid grid-cols-2 gap-2">
                 {PAIN_TRIGGERS.map((trigger) => (
-                  <button
+                  <Card
                     key={trigger.id}
                     onClick={() => togglePainTrigger(trigger.id)}
-                    className={`p-3 rounded-lg text-sm text-left transition-colors ${
+                    className={`p-3 cursor-pointer text-center transition-all active:scale-[0.98] ${
                       painTriggers.includes(trigger.id)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border"
                     }`}
                   >
-                    {trigger.label}
-                  </button>
+                    <span className="text-sm">{trigger.label}</span>
+                  </Card>
                 ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 4: 体型评估 */}
-        {step === 4 && (
+        {/* Step 5: 体型评估 */}
+        {step === 5 && (
           <div>
-            <h2 className="text-base font-semibold mb-1">体型评估</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">体型评估</h2>
             <p className="text-sm text-muted-foreground mb-4">
               请选择最符合你的体型（软组织厚度影响负压传导）
             </p>
@@ -413,10 +509,10 @@ export default function QuestionnairePage() {
           </div>
         )}
 
-        {/* Step 5: 初次使用 */}
-        {step === 5 && (
+        {/* Step 6: 初次使用 */}
+        {step === 6 && (
           <div>
-            <h2 className="text-base font-semibold mb-1">初次使用确认</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">初次使用确认</h2>
             <p className="text-sm text-muted-foreground mb-4">
               你是第一次使用PAD设备吗？
             </p>
@@ -458,8 +554,8 @@ export default function QuestionnairePage() {
           </div>
         )}
 
-        {/* Step 6: 评估结果预览 */}
-        {step === 6 && (
+        {/* Step 7: 评估结果预览 */}
+        {step === 7 && (
           <div>
             <div className="text-center mb-6">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -498,7 +594,7 @@ export default function QuestionnairePage() {
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground">
                 评估依据：{stiffness === 0 ? "无僵硬" : stiffness === 1 ? "轻度僵硬" : "明显僵硬"} | 
-                下蹲疼痛: {squatPain[0]}分 | 
+                下蹲疼痛: {squatPain}分 | 
                 体型: {BODY_TYPES.find(b => b.id === bodyType)?.label || "-"} | 
                 {isFirstTime ? "首次使用" : "有使用经验"}
               </p>
@@ -508,11 +604,20 @@ export default function QuestionnairePage() {
       </main>
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border flex gap-3">
+        {step > 1 && (
+          <Button
+            variant="outline"
+            onClick={() => setStep(step - 1)}
+            className="flex-1 h-11 text-base"
+          >
+            上一步
+          </Button>
+        )}
         <Button
           onClick={handleNext}
           disabled={!canProceed()}
-          className="w-full h-11 text-base font-medium"
+          className="flex-1 h-11 text-base font-medium"
         >
           {step === totalSteps ? "前往设备配置" : "下一步"}
         </Button>
@@ -555,13 +660,13 @@ export default function QuestionnairePage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-sm p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-yellow-500/10 rounded-full flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
+                <span className="text-xl">⚠️</span>
               </div>
-              <h3 className="text-base font-semibold">疼痛程度较高</h3>
+              <h3 className="text-base font-semibold">疼痛较重提示</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
-              您当前的疼痛评分为 {squatPain[0]} 分（较高），系统将自动降低推荐强度。建议谨慎使用。
+              您的下蹲疼痛评分较高（{squatPain}分），建议从低强度开始，如有异常请停止使用并咨询医生。
             </p>
             <div className="flex gap-2">
               <Button
@@ -574,12 +679,12 @@ export default function QuestionnairePage() {
               <Button
                 onClick={() => {
                   setShowPainAlert(false)
-                  adjustLevelByPain(squatPain[0])
+                  adjustLevelByPain(squatPain)
                   setStep(step + 1)
                 }}
                 className="flex-1 h-10"
               >
-                继续评估
+                我已了解
               </Button>
             </div>
           </Card>

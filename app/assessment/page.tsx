@@ -200,13 +200,13 @@ export default function AssessmentPage() {
         <button onClick={() => router.back()} className="p-1.5 text-white/70">
           <X className="w-5 h-5" />
         </button>
-        <div className="flex bg-slate-800 rounded-lg p-0.5">
+        <div className="flex bg-slate-800/80 rounded-full p-1 border border-slate-700">
           {EXERCISES.map((ex, i) => (
             <button
               key={ex.id}
               onClick={() => { setSelectedIdx(i); handleReset() }}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                selectedIdx === i ? "bg-cyan-500 text-white" : "text-slate-400"
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                selectedIdx === i ? "bg-cyan-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-300"
               }`}
             >
               {ex.name}
@@ -218,13 +218,13 @@ export default function AssessmentPage() {
 
       {/* Demo Area */}
       <div className="flex-1 relative bg-gradient-to-b from-slate-900 via-slate-800/50 to-slate-900">
-        {/* Info */}
+        {/* Info - 匹配Figma样式 */}
         <div className="absolute top-2 left-4 z-10">
-          <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-medium">
+          <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-semibold">
             {exercise.name}
-            <span className="text-slate-500 text-xs">(Level {exercise.level})</span>
+            <span className="text-slate-400 text-xs font-normal">(Level {exercise.level})</span>
           </div>
-          <p className="text-slate-400 text-xs mt-0.5">{exercise.description}</p>
+          <p className="text-slate-500 text-xs mt-1">{exercise.description}</p>
         </div>
 
         {/* 3D Toggle */}

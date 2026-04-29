@@ -95,29 +95,29 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] pb-20">
-      {/* Header - 匹配Figma设计 */}
-      <header className="bg-[#2066A2] text-white px-5 pt-12 pb-8 rounded-b-3xl">
+      {/* Header - 匹配Figma设计：蓝色背景大圆角 */}
+      <header className="bg-[#2066A2] text-white px-5 pt-14 pb-10 rounded-b-[32px]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5" />
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <User className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">
-                你好，{profile?.nickname || "用户"}
+              <h1 className="text-2xl font-bold">
+                你好，{profile?.nickname || "1111"}
               </h1>
-              <p className="text-sm text-white/70">
+              <p className="text-sm text-white/70 mt-0.5">
                 今天感觉怎么样？
               </p>
             </div>
           </div>
           <button 
             onClick={() => router.push("/notifications")}
-            className="relative w-10 h-10 bg-white/10 rounded-full flex items-center justify-center"
+            className="relative w-11 h-11 bg-[#1a5485] rounded-full flex items-center justify-center"
           >
             <Bell className="w-5 h-5" />
             {notifications > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-[#2066A2] text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-white text-[#2066A2] text-xs font-bold rounded-full flex items-center justify-center shadow-sm">
                 {notifications}
               </span>
             )}
@@ -126,33 +126,33 @@ export default function HomePage() {
       </header>
 
       <main className="px-5 -mt-4">
-        {/* 常用功能 - 4个图标格子 */}
-        <Card className="p-5 mb-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">常用功能</h2>
-          <div className="grid grid-cols-4 gap-4">
+        {/* 常用功能 - 4个图标格子，匹配Figma */}
+        <Card className="p-5 mb-4 border-0 shadow-sm">
+          <h2 className="text-base font-bold text-gray-900 mb-5">常用功能</h2>
+          <div className="grid grid-cols-4 gap-3">
             {FEATURES.map((feature) => (
               <button
                 key={feature.id}
                 onClick={() => router.push(feature.href)}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-2.5"
               >
-                <div className={`w-14 h-14 ${feature.bgColor} rounded-2xl flex items-center justify-center`}>
-                  <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
+                <div className={`w-16 h-16 ${feature.bgColor} rounded-2xl flex items-center justify-center shadow-sm`}>
+                  <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
                 </div>
-                <span className="text-xs text-gray-600">{feature.title}</span>
+                <span className="text-xs text-gray-700 font-medium">{feature.title}</span>
               </button>
             ))}
           </div>
         </Card>
 
-        {/* 今日待办 */}
-        <Card className="p-5 mb-5">
+        {/* 今日待办 - 匹配Figma样式 */}
+        <Card className="p-5 mb-4 border-0 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-[#2066A2]" />
-              <h2 className="text-base font-semibold text-gray-900">今日待办</h2>
+              <h2 className="text-base font-bold text-gray-900">今日待办</h2>
             </div>
-            <span className="text-sm text-[#2066A2] font-medium">
+            <span className="text-sm text-[#2066A2] font-semibold">
               完成度 {completedCount}/{todayTasks.length}
             </span>
           </div>
@@ -182,8 +182,8 @@ export default function HomePage() {
         </Card>
 
         {/* 本周概览 */}
-        <Card className="p-5">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">本周概览</h2>
+        <Card className="p-5 border-0 shadow-sm">
+          <h2 className="text-base font-bold text-gray-900 mb-4">本周概览</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 bg-blue-50 rounded-xl">
               <p className="text-2xl font-bold text-[#2066A2]">3</p>
